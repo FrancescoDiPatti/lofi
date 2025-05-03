@@ -27,6 +27,19 @@ Lofi is a mini Spotify player with visualizations. It is _not_ a replacement for
 - Visualization-ready (WebGL)
 - ≤ 100MB memory footprint
 
+## Lyrics (new feature)
+
+Lofi now uses [lrclib.net](https://lrclib.net) as the main source for lyrics. When a song is played, the app automatically searches for synchronized lyrics using the track title and artist name via the lrclib public API. Everything is fetched from the lrclib community-powered database.
+
+- [lrclib API documentation](https://lrclib.net/docs)
+- [lrclib GitHub repository](https://github.com/tranxuanthang/lrclib)
+
+| Custom Font and background color | Minimalistic and simple|
+|--|--|
+|![](https://github.com/alient12/lofi/assets/73688480/2f0824c9-1a18-4730-9906-e9cf04030d14)|![](https://github.com/alient12/lofi/assets/73688480/0a95ac65-68b8-4a9d-84e5-ab3ad671024e)|
+
+Installing `Circular Std Book` font is recommanded for lyrics.
+
 # Building
 
 To build, you'll need `node-gyp`, a compatible Python version (2.x), and your operating system's SDK (Microsoft Build Tools or Xcode).

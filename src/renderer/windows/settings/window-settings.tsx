@@ -21,7 +21,6 @@ export const WindowSettings: FunctionComponent = () => {
 
   const barThicknessWatch = watch('barThickness');
   const cornerRadiusWatch = watch('cornerRadius');
-  const tempTrackInfoWatch = watch('showTrackInfoTemporarilyInSeconds');
 
   return (
     <FormGroup>
@@ -45,20 +44,6 @@ export const WindowSettings: FunctionComponent = () => {
             size="xs"
             {...register('isAlwaysShowTrackInfo')}
           />
-        </Row>
-        <Row>
-          <Label>
-            Show Track Info Temporarily (Seconds)
-            <Slider
-              type="range"
-              min={0}
-              max={10}
-              step={1}
-              defaultValue={DEFAULT_SETTINGS.showTrackInfoTemporarilyInSeconds}
-              {...register('showTrackInfoTemporarilyInSeconds', { required: true, valueAsNumber: true })}
-            />
-            <RangeValue>{tempTrackInfoWatch}</RangeValue>
-          </Label>
         </Row>
         <Row>
           <StyledCheckbox

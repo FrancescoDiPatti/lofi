@@ -6,10 +6,12 @@ import styled, { css } from 'styled-components';
 
 import { IpcMessage, WindowName } from '../../../constants';
 import { Settings, VisualizationType } from '../../../models/settings';
+import { LyricsData, SpotifyLyricsApiInstance } from '../../api/lyrics-api';
 import { AccountType, SpotifyApiInstance } from '../../api/spotify-api';
 import { WindowPortal } from '../../components';
 import { useCurrentlyPlaying } from '../../contexts/currently-playing.context';
 import { CurrentlyPlayingActions, CurrentlyPlayingType } from '../../reducers/currently-playing.reducer';
+import { Lyrics } from '../../windows/lyrics';
 import { TrackInfo } from '../../windows/track-info';
 import { Bars } from '../bars';
 import { Controls } from './controls';
@@ -52,7 +54,8 @@ export const Cover: FunctionComponent<Props> = ({ settings, message, onVisualiza
     barColor,
     isAlwaysShowSongProgress,
     isAlwaysShowTrackInfo,
-    showTrackInfoTemporarilyInSeconds,
+    isAlwaysShowLyrics,
+    isShowLyrics,
     isOnLeft,
     size,
     skipSongDelay,
@@ -65,14 +68,20 @@ export const Cover: FunctionComponent<Props> = ({ settings, message, onVisualiza
 
   const [currentSongId, setCurrentSongId] = useState('');
   const [shouldShowTrackInfo, setShouldShowTrackInfo] = useState(isAlwaysShowTrackInfo);
-  const [trackInfoTimer, setTrackInfoTimer] = useState<NodeJS.Timeout | null>(null);
+  const [shouldAlwaysShowLyrics, setShouldAlwaysShowLyrics] = useState(isAlwaysShowLyrics);
   const [errorToDisplay, setErrorToDisplay] = useState('');
+  const [currentLyrics, setCurrentLyrics] = useState<LyricsData>();
+  const [lyricsLoggedIn, setLyricsLoggedIn] = useState(false);
 
   useEffect(() => setErrorToDisplay(message), [message]);
 
   useEffect(() => {
     setShouldShowTrackInfo(isAlwaysShowTrackInfo);
   }, [isAlwaysShowTrackInfo]);
+
+  useEffect(() => {
+    setShouldAlwaysShowLyrics(isAlwaysShowLyrics);
+  }, [isAlwaysShowLyrics]);
 
   const artist = useMemo(() => truncateText(state.artist), [state.artist]);
   const songTitle = useMemo(() => truncateText(state.track), [state.track]);
@@ -110,45 +119,27 @@ export const Cover: FunctionComponent<Props> = ({ settings, message, onVisualiza
 
   useEffect(() => {
     (async () => {
-      if (state.isPlaying) {
-        if (state.id !== currentSongId) {
-          setCurrentSongId(state.id);
-          console.log(`New song '${songTitle}' by '${artist}.`);
-          await refreshTrackLiked();
-        }
-
-        if (!isAlwaysShowTrackInfo && showTrackInfoTemporarilyInSeconds) {
-          setShouldShowTrackInfo(true);
-
-          const timer = setTimeout(() => {
-            if (!document.getElementById('visible-ui')?.matches(':hover')) {
-              setShouldShowTrackInfo(false);
-            }
-            setTrackInfoTimer(null);
-          }, showTrackInfoTemporarilyInSeconds * ONE_SECOND_IN_MS);
-
-          setTrackInfoTimer(timer);
-        }
+      if (state.isPlaying && state.id !== currentSongId) {
+        setCurrentSongId(state.id);
+        console.log(`New song '${songTitle}' by '${artist}.`);
+        await refreshTrackLiked();
       }
     })();
-  }, [
-    artist,
-    currentSongId,
-    refreshTrackLiked,
-    songTitle,
-    state.id,
-    state.isPlaying,
-    isAlwaysShowTrackInfo,
-    showTrackInfoTemporarilyInSeconds,
-  ]);
+  }, [artist, currentSongId, refreshTrackLiked, songTitle, state.id, state.isPlaying]);
 
   useEffect(() => {
-    return () => {
-      if (trackInfoTimer) {
-        clearTimeout(trackInfoTimer);
-      }
-    };
-  }, [trackInfoTimer]);
+    (async () => {
+      const lyrics = await SpotifyLyricsApiInstance.getLyrics(songTitle, artist);
+      setCurrentLyrics(lyrics);
+    })();
+  }, [songTitle, artist]);
+
+  useEffect(() => {
+    (async () => {
+      const loggedIn = await SpotifyLyricsApiInstance.login();
+      setLyricsLoggedIn(loggedIn);
+    })();
+  }, []);
 
   const keepAlive = useCallback(async (): Promise<void> => {
     if (state.isPlaying || state.userProfile?.accountType !== AccountType.Premium) {
@@ -223,10 +214,7 @@ export const Cover: FunctionComponent<Props> = ({ settings, message, onVisualiza
   }, [handlePlaybackChanged, trackInfoRefreshTimeInSeconds]);
 
   useEffect(() => {
-    const refreshTrackLikedIntervalId = setInterval(
-      refreshTrackLiked,
-      2 * trackInfoRefreshTimeInSeconds * ONE_SECOND_IN_MS
-    );
+    const refreshTrackLikedIntervalId = setInterval(refreshTrackLiked, 2 * trackInfoRefreshTimeInSeconds * ONE_SECOND_IN_MS);
     return () => {
       if (refreshTrackLikedIntervalId) {
         clearInterval(refreshTrackLikedIntervalId);
@@ -248,8 +236,14 @@ export const Cover: FunctionComponent<Props> = ({ settings, message, onVisualiza
   return (
     <div
       className="transparent"
-      onMouseEnter={() => !isAlwaysShowTrackInfo && setShouldShowTrackInfo(true)}
-      onMouseLeave={() => !isAlwaysShowTrackInfo && !trackInfoTimer && setShouldShowTrackInfo(false)}>
+      onMouseEnter={() => {
+        if (!isAlwaysShowTrackInfo) setShouldShowTrackInfo(true);
+        if (isShowLyrics && !isAlwaysShowLyrics) setShouldAlwaysShowLyrics(true);
+      }}
+      onMouseLeave={() => {
+        if (!isAlwaysShowTrackInfo) setShouldShowTrackInfo(false);
+        if (isShowLyrics && !isAlwaysShowLyrics) setShouldAlwaysShowLyrics(false);
+      }}>
       <Menu
         onVisualizationChange={onVisualizationChange}
         onVisualizationCycle={onVisualizationCycle}
@@ -258,8 +252,13 @@ export const Cover: FunctionComponent<Props> = ({ settings, message, onVisualiza
       {state.id ? (
         <>
           {shouldShowTrackInfo && (
-            <WindowPortal name={WindowName.TrackInfo} features={{ focusable: false }}>
+            <WindowPortal name={WindowName.TrackInfo}>
               <TrackInfo track={songTitle} artist={artist} isOnLeft={isOnLeft} message={errorToDisplay || message} />
+            </WindowPortal>
+          )}
+          {shouldAlwaysShowLyrics && (
+            <WindowPortal name={WindowName.Lyrics}>
+              <Lyrics isOnLeft={isOnLeft} lyrics={currentLyrics} loggedIn={lyricsLoggedIn} />
             </WindowPortal>
           )}
           <CoverContent
