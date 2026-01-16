@@ -56,5 +56,5 @@ export enum ApplicationUrl {
   Help = 'https://www.lofi.rocks/help',
   Discord = 'https://discord.gg/YuH9UJk',
   GitHub = 'https://github.com/dvx/lofi',
-  FindLyricsToken = 'https://github.com/akashrchandran/syrics/wiki/Finding-sp_dc',
+  Spotify = 'spotify:',
 }
