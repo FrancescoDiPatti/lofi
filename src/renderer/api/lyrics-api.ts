@@ -37,8 +37,8 @@ export interface LyricsData {
 }
 
 class SpotifyLyricsAPI {
-  constructor() {
-  }
+  constructor() {}
+
   async login(): Promise<boolean> {
     return true;
   }
@@ -48,7 +48,9 @@ class SpotifyLyricsAPI {
       return null;
     }
     try {
-      const searchUrl = `https://lrclib.net/api/search?track_name=${encodeURIComponent(trackTitle)}&artist_name=${encodeURIComponent(artistName)}`;
+      const searchUrl = `https://lrclib.net/api/search?track_name=${encodeURIComponent(
+        trackTitle
+      )}&artist_name=${encodeURIComponent(artistName)}`;
       const searchRes = await fetch(searchUrl);
       if (!searchRes.ok) throw new Error('lrclib search failed');
       const searchResults = await searchRes.json();
@@ -58,20 +60,23 @@ class SpotifyLyricsAPI {
       const lyricsRes = await fetch(lyricsUrl);
       if (!lyricsRes.ok) throw new Error('lrclib get failed');
       const lrclibData = await lyricsRes.json();
-      const lines = (lrclibData.syncedLyrics || '').split('\n').map((line: string) => {
-        const match = line.match(/^\[(\d+):(\d+).(\d+)\](.*)$/);
-        if (!match) return null;
-        const min = parseInt(match[1], 10);
-        const sec = parseInt(match[2], 10);
-        const ms = parseInt(match[3], 10) * 10;
-        const startTimeMs = ((min * 60 + sec) * 1000 + ms).toString();
-        return {
-          startTimeMs,
-          endTimeMs: startTimeMs,
-          words: match[4].trim(),
-          syllables: [] as any[],
-        };
-      }).filter(Boolean);
+      const lines = (lrclibData.syncedLyrics || '')
+        .split('\n')
+        .map((line: string) => {
+          const match = line.match(/^\[(\d+):(\d+).(\d+)\](.*)$/);
+          if (!match) return null;
+          const min = parseInt(match[1], 10);
+          const sec = parseInt(match[2], 10);
+          const ms = parseInt(match[3], 10) * 10;
+          const startTimeMs = ((min * 60 + sec) * 1000 + ms).toString();
+          return {
+            startTimeMs,
+            endTimeMs: startTimeMs,
+            words: match[4].trim(),
+            syllables: [] as any[],
+          };
+        })
+        .filter(Boolean);
       return {
         lyrics: {
           syncType: 'LINE_SYNCED',

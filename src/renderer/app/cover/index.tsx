@@ -214,7 +214,10 @@ export const Cover: FunctionComponent<Props> = ({ settings, message, onVisualiza
   }, [handlePlaybackChanged, trackInfoRefreshTimeInSeconds]);
 
   useEffect(() => {
-    const refreshTrackLikedIntervalId = setInterval(refreshTrackLiked, 2 * trackInfoRefreshTimeInSeconds * ONE_SECOND_IN_MS);
+    const refreshTrackLikedIntervalId = setInterval(
+      refreshTrackLiked,
+      2 * trackInfoRefreshTimeInSeconds * ONE_SECOND_IN_MS
+    );
     return () => {
       if (refreshTrackLikedIntervalId) {
         clearInterval(refreshTrackLikedIntervalId);

@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import React, { FunctionComponent, useMemo, useEffect, useState } from 'react';
+import React, { FunctionComponent, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 
 import { DEFAULT_SETTINGS } from '../../../models/settings';
@@ -83,7 +83,7 @@ const LyricsText: FunctionComponent<LyricTextProps> = ({
   isLyricsBlur,
 }) => {
   const { state } = useCurrentlyPlaying();
-  const [manualIndex, setManualIndex] = useState<number|null>(null);
+  const [manualIndex, setManualIndex] = useState<number | null>(null);
   const [lastManualScroll, setLastManualScroll] = useState<number>(0);
   const lines = lyrics?.lyrics?.lines || [];
 
@@ -207,7 +207,10 @@ export const Lyrics: FunctionComponent<LyricsProps> = ({ lyrics, loggedIn, isOnL
       const [fh, fs, fl, fa] = fromMatch.slice(1).map(Number);
       const [th, ts, tl, ta] = toMatch.slice(1).map(Number);
       const lerp = (a: number, b: number) => a + (b - a) * t;
-      return `hsl(${Math.round(lerp(fh, th))}, ${Math.round(lerp(fs, ts))}%, ${Math.round(lerp(fl, tl))}%, ${lerp(fa, ta)})`;
+      return `hsl(${Math.round(lerp(fh, th))}, ${Math.round(lerp(fs, ts))}%, ${Math.round(lerp(fl, tl))}%, ${lerp(
+        fa,
+        ta
+      )})`;
     }
 
     function animate(ts: number) {
