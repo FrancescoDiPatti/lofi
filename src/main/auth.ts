@@ -49,7 +49,7 @@ export const getAuthUrl = (): string => {
   const scopes = AUTH_SCOPES.join('%20');
 
   const authUrl =
-    `${AUTH_URL}?response_type=code&client_id=${AUTH_CLIENT_ID}&redirect_uri=http://localhost:${AUTH_PORT}&` +
+    `${AUTH_URL}?response_type=code&client_id=${AUTH_CLIENT_ID}&redirect_uri=http://127.0.0.1:${AUTH_PORT}&` +
     `scope=${scopes}&state=${codeState}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
 
   return authUrl;
@@ -120,7 +120,7 @@ const retrieveAccessToken = async (verifier: string, code: string): Promise<Auth
 
   const body =
     `client_id=${AUTH_CLIENT_ID}&grant_type=authorization_code&` +
-    `code=${code}&redirect_uri=http://localhost:${AUTH_PORT}&code_verifier=${verifier}`;
+    `code=${code}&redirect_uri=http://127.0.0.1:${AUTH_PORT}&code_verifier=${verifier}`;
 
   const res = await fetch(AUTH_TOKEN_URL, {
     method: 'POST',
@@ -149,7 +149,7 @@ const stopServer = (): void => {
 };
 
 const handleServerResponse = async (request: http.IncomingMessage, response: http.ServerResponse): Promise<void> => {
-  const urlObj = new URL(`http://localhost:${AUTH_PORT}/${request.url}`);
+  const urlObj = new URL(`http://127.0.0.1:${AUTH_PORT}/${request.url}`);
   const queryState = urlObj.searchParams.get('state');
 
   try {
